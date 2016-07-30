@@ -250,9 +250,15 @@ function wrapper(plugin_info) {
 				color = 'green';
 				window.plugin.weather.datas_counters.teams.ENL.cell_count++;
 				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
-			} else {
+			} else if (parseInt(game_score[0]) < parseInt(game_score[1])) {
 				color = 'blue';
 				window.plugin.weather.datas_counters.teams.RES.cell_count++;
+				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
+			} else if ((parseInt(game_score[0]) === 0) && (parseInt(game_score[1]) === 0)) {
+				color = 'red';
+			} else if (parseInt(game_score[0]) === parseInt(game_score[1])) {
+				color = 'orange';
+				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
 				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
 			}
 
