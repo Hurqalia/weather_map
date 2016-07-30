@@ -26,5 +26,6 @@
  - Spain
  - Great Britain (England + Scotland)
  - United Kingdom (England + Scotland + Ireland)
+ - USA
 
 I can add your country, ask me by creating an issue or by email at hurqalia22 dot gmail.com
