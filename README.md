@@ -15,6 +15,12 @@
  - Show weather map by check point
   - Play all check points as a little animation
 
+# Cells color
+ - Blue : RES
+ - Green : ENL
+ - Orange : Scores equal between RES and ENL
+ - Red : Scores RES and ENL equal to zero
+
 # Available countries
  - Austria
  - England
