@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.0.20160726.001
+// @version        0.1.1.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -33,6 +33,10 @@ function wrapper(plugin_info) {
 	window.plugin.weather.cells_count        = 0;
 	window.plugin.weather.datas_cells_count  = 0;
 	window.plugin.weather.load_cells_count   = 0;
+	window.plugin.weather.timeline_count     = 0;
+	window.plugin.weather.timeline_interval  = 0;
+	window.plugin.weather.cp_count           = 0;
+	window.plugin.weather.selected_cp        = null;
 	window.plugin.weather.in_progress        = false;
 	window.plugin.weather.cells_failed       = [];
   	window.plugin.weather.weatherLayer       = null;
@@ -230,27 +234,33 @@ function wrapper(plugin_info) {
 
 	// draw cell
 
-	window.plugin.weather.drawCell = function(r, corners, center, name) {
+	window.plugin.weather.drawCell = function(r, corners, center, name, history) {
 
 		if (typeof r !== "undefined" && r !== null) {
+			var game_score = [];
+			if (history) {
+				game_score[0] = r.scoreHistory[window.plugin.weather.selected_cp][1];
+				game_score[1] = r.scoreHistory[window.plugin.weather.selected_cp][2];
+			} else {
+				game_score = r.result.gameScore;
+			}
+
 			var color  = '';
-			if (parseInt(r.result.gameScore[0]) > parseInt(r.result.gameScore[1])) {
+			if (parseInt(game_score[0]) > parseInt(game_score[1])) {
 				color = 'green';
 				window.plugin.weather.datas_counters.teams.ENL.cell_count++;
-				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(r.result.gameScore[0]);
+				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
 			} else {
 				color = 'blue';
 				window.plugin.weather.datas_counters.teams.RES.cell_count++;
-				window.plugin.weather.datas_counters.teams.RES.total += parseInt(r.result.gameScore[1]);
+				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
 			}
 
-			window.plugin.weather.datas_counters[name] = r.result;
-
-			var frcell = L.geodesicPolyline([corners[0],corners[1],corners[2], corners[3]], {fill: true, color: color, opacity: 0.8, weight: 1, clickable: true, data : name });
+			var frcell = L.geodesicPolyline([corners[0],corners[1],corners[2], corners[3]], {fill: true, color: color, opacity: 0.8, weight: 1, clickable: false, data : name });
 
 			window.plugin.weather.weatherLayer.addLayer(frcell);
 
-			var content = name + "<br/>RES : " + r.result.gameScore[1] + "<br/>ENL : " + r.result.gameScore[0];
+			var content = name + "<br/>RES : " + game_score[1] + "<br/>ENL : " + game_score[0];
 
 			var marker = L.marker(center, {
 				icon: L.divIcon({
@@ -279,8 +289,8 @@ function wrapper(plugin_info) {
 
 		var perc   =  Math.round(((best * 100) / window.plugin.weather.datas_cells_count) * 100) / 100;
 
-		var summbox = 'Weather Map Summary' +
-			'<table>' + 
+		var summbox = 'Weather Map Summary' ;
+		summbox += '<table>' + 
 			'<tr><td>Country Cells count</td><td> : ' + window.plugin.weather.datas_cells_count + '</td></tr>' +
 			'<tr><td>ENL Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.ENL.cell_count + '</td></tr>' +
 			'<tr><td>RES Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.RES.cell_count + '</td></tr>' +
@@ -291,11 +301,110 @@ function wrapper(plugin_info) {
 
 		if (window.plugin.weather.cells_failed.length > 0) {
 			summbox += window.plugin.weather.cells_failed.length + " cell" + ((window.plugin.weather.cells_failed.length > 1) ? 's' : '') + " request failed ";
-			summbox += '<button onclick="window.plugin.weather.retry();">Retry</button>';
+			summbox += '<button class="weather-button" onclick="window.plugin.weather.retry();">Retry</button>';
+		} else {
+			var first_key = Object.keys(window.plugin.weather.datas_counters.datas)[0];
+			var cp_index  = window.plugin.weather.datas_counters.datas[first_key].scoreHistory.length;
+			if (cp_index > 1) {
+				summbox += '<p>Show another checkpoint : ';
+				summbox += '<select id="cp_selector">';
+				for (var i=0; i < cp_index; i++) { 
+					var label     = cp_index - i;
+					var selected  = ((window.plugin.weather.selected_cp !== null) && (window.plugin.weather.selected_cp == i)) ? 'selected' : '';
+					summbox += '<option value="' + i + '" ' + selected + '> CP ' + label + ' </option>';
+				}
+				summbox += '</select><br />';
+				summbox += '<button class="weather-button" onclick="window.plugin.weather.selectCheckPoint();">Show CP</button> ';
+				summbox += '<button class="weather-button" onclick="window.plugin.weather.queueTimer();">CP Timeline</button>';
+				summbox += '</p>';
+			}
 		}
 
 		$("#sumbox-weather").empty();
 		$('#sumbox-weather').html(summbox);
+	};
+
+	// check points
+
+	window.plugin.weather.selectCheckPoint = function() {
+		window.plugin.weather.selected_cp = $('#cp_selector').val();
+		window.plugin.weather.drawCheckPoint();
+	};
+
+	window.plugin.weather.queueTimer = function() {
+		if (window.plugin.weather.in_progress) {
+			return false;
+		}
+		var first_key                           = Object.keys(window.plugin.weather.datas_counters.datas)[0];
+		window.plugin.weather.cp_count          = window.plugin.weather.datas_counters.datas[first_key].scoreHistory.length;
+		window.plugin.weather.timeline_count    = window.plugin.weather.cp_count;
+		window.plugin.weather.timeline_interval = setInterval(window.plugin.weather.animeCheckPoint, 1000);
+		window.plugin.weather.initCountDown();
+	};
+
+	window.plugin.weather.animeCheckPoint = function() {
+		if (window.plugin.weather.in_progress) {
+			window.plugin.weather.removeCountDown();
+			return false;
+		}
+
+		if (window.plugin.weather.timeline_count <= 0) {
+			clearInterval(window.plugin.weather.timeline_interval);
+			window.plugin.weather.removeCountDown();
+			return;
+		}
+
+		window.plugin.weather.selected_cp = (window.plugin.weather.timeline_count - 1);
+		window.plugin.weather.setCountDown(parseInt(window.plugin.weather.cp_count ) - parseInt(window.plugin.weather.selected_cp));
+		window.plugin.weather.drawCheckPoint();
+		window.plugin.weather.timeline_count--;
+	};
+
+	window.plugin.weather.drawCheckPoint = function(cp_id) {
+		if (window.plugin.weather.in_progress) {
+			return false;
+		}
+
+		window.plugin.weather.in_progress      = true;
+		window.plugin.weather.cells_failed     = [];
+		window.plugin.weather.collected        = 0;
+		window.plugin.weather.load_cells_count = 0;
+		window.plugin.weather.datas_counters.teams = { 'ENL' : { cell_count : 0 , total : 0 }, 'RES' : {cell_count : 0 , total : 0} };
+
+		window.plugin.weather.weatherLayer.clearLayers();
+		window.plugin.weather.weatherLegendLayer.clearLayers();
+
+		$("#sumbox-weather").empty();
+
+		$.each(window.plugin.weather.datas_country, function(name, datas) {
+			window.plugin.weather.collected++;
+			window.plugin.weather.load_cells_count++;
+			var result  = window.plugin.weather.datas_counters.datas[name];
+			var corners = window.plugin.weather.datas_counters.corners[name];
+			var center  = window.plugin.weather.datas_counters.center[name];
+			window.plugin.weather.drawCell(result, corners, center, name, true);
+		});
+
+		addLayerGroup('Weather Map', window.plugin.weather.weatherLayer, true);
+		addLayerGroup('Legend Weather Map', window.plugin.weather.weatherLegendLayer, true);
+	};
+
+	// check point countdown
+	
+	window.plugin.weather.initCountDown = function() {
+		var dashboard = document.getElementById('dashboard');
+		var counter_div = document.createElement('div');
+		counter_div.setAttribute('style', "font-size:60px; position: fixed; left: 50px; top: 50px; width:200px; height: 70px; z-index: auto; opacity:0.7; pointer-events: none; background-color:white; color:gold; text-align:center; vertical-align:center;");
+		counter_div.setAttribute('class', 'weather-countdown');
+		dashboard.appendChild(counter_div);
+	};
+
+	window.plugin.weather.setCountDown = function(s) {
+		$('.weather-countdown').html('CP ' + s);
+	};
+
+	window.plugin.weather.removeCountDown = function() {
+		$('.weather-countdown').remove();
 	};
 
 	// progress counter
@@ -380,7 +489,7 @@ function wrapper(plugin_info) {
 		window.plugin.weather.cells_failed     = [];
 		window.plugin.weather.collected        = 0;
 		window.plugin.weather.load_cells_count = 0;
-		window.plugin.weather.datas_counters            = { 'teams' : { 'ENL' : { cell_count : 0 , total : 0 }, 'RES' : {cell_count : 0 , total : 0} }, datas : {} };
+		window.plugin.weather.datas_counters   = { 'teams' : { 'ENL' : { cell_count : 0 , total : 0 }, 'RES' : {cell_count : 0 , total : 0} }, datas : {}, corners : {}, center : {} };
 
 		window.plugin.weather.weatherLayer.clearLayers();
 		window.plugin.weather.weatherLegendLayer.clearLayers();
@@ -432,7 +541,6 @@ function wrapper(plugin_info) {
 		window.postAjax('getRegionScoreDetails',
 				{ latE6:latE6, lngE6:lngE6 },
 				function(result) {
-					
 					if (Object.keys(result).length === 0) {
 						if (window.plugin.weather.cells_failed.indexOf(name) === -1) {
 							window.plugin.weather.cells_failed.push(name);
@@ -443,8 +551,11 @@ function wrapper(plugin_info) {
 						window.plugin.weather.cells_failed.splice(window.plugin.weather.cells_failed.indexOf(name), 1);
 					}
 					window.plugin.weather.collected++;
-			        	window.plugin.weather.load_cells_count++;				
-					window.plugin.weather.drawCell(result, corners, center, name);
+			        	window.plugin.weather.load_cells_count++;
+			        	window.plugin.weather.datas_counters.datas[name]   = result.result;
+			        	window.plugin.weather.datas_counters.corners[name] = corners;
+			        	window.plugin.weather.datas_counters.center[name]   = center;
+					window.plugin.weather.drawCell(result, corners, center, name, false);
 				},
 				function() {
 					if (window.plugin.weather.cells_failed.indexOf(name) === -1) {
@@ -452,7 +563,7 @@ function wrapper(plugin_info) {
 					}
 					if (! loop) {
 						window.plugin.weather.collected++;
-						window.plugin.weather.drawCell(null, '', '', name);
+						window.plugin.weather.drawCell(null, '', '', name, false);
 						return false;
 					}
 					window.plugin.weather.getScore(datas, false);
@@ -467,7 +578,7 @@ function wrapper(plugin_info) {
 		window.plugin.weather.addButtons();
 		 $("<style>")
 		    .prop("type", "text/css")
-		    .html(".cell-content-name { font-size: 12px; font-weight: bold; color: gold; opacity: 0.7; text-align: center; text-shadow: -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000, 0 0 2px #000; pointer-events: none; }")
+		    .html(".cell-content-name { font-size: 12px; font-weight: bold; color: gold; opacity: 0.7; text-align: center; text-shadow: -1px -1px #000, 1px -1px #000, -1px 1px #000, 1px 1px #000, 0 0 2px #000; pointer-events: none; } .weather-button { padding: 2px; min-width: 40px; color: #FFCE00; border: 1px solid #FFCE00; background-color: rgba(8, 48, 78, 0.9); }")
 		  .appendTo("head");
 		$('#sidebar').append('<div id="sumbox-weather" style="padding:4px; color: rgb(255, 206, 0); font-size:10pt;"></div>');
 
