@@ -12,6 +12,8 @@
   - Change prefered country with the menu "Weather Map Config"
  - Load score with the menu "Weather Map"
   - A counter is displayed during loading scores. Wait until the panel displays and if some request fails a button will appears to reload the missing cells. Use it until the missing cells are recovered.
+ - Show weather map by check point
+  - Play all check points as a little animation
 
 # Available countries
  - England
@@ -19,6 +21,7 @@
  - Germany
  - Ireland
  - Italia
+ - Poland
  - Scotland
  - Spain
  - Great Britain (England + Scotland)
