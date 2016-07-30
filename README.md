@@ -7,5 +7,5 @@
 # How To
 
  - First time, select the country of you choice to save your preferences.
-  - Change prefered with the choice "Weather Map Config"
+  - Change prefered country with the choice "Weather Map Config"
  - Load score with the choice "Weather Map"
