@@ -1,2 +1,11 @@
+# IITC plugin : Weather Map
 
-# weather_map
+ Cells activity by countries
+
+ Based on CP scores for the current cycle.
+
+# How To
+
+ - First time, select the country of you choice to save your preferences.
+  - Change prefered with the choice "Weather Map Config"
+ - Load score with the choice "Weather Map"
