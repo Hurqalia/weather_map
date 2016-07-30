@@ -23,6 +23,7 @@
 
 # Available countries
  - Austria
+ - China
  - England
  - France
  - Germany
