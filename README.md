@@ -7,8 +7,8 @@
 # How To
 
  - First time, select the country of you choice to save your preferences.
-  - Change prefered country with the choice "Weather Map Config"
- - Load score with the choice "Weather Map"
+  - Change prefered country with the menu "Weather Map Config"
+ - Load score with the menu "Weather Map"
   - A counter is displayed during loading scores. Wait until the panel displays and if some request fails a button will appears to reload the missing cells. Use it until the missing cells are recovered.
 
 # Available countries
