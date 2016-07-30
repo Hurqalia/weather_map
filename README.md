@@ -1,6 +1,6 @@
 # IITC plugin : Weather Map
 
- Cells activity by countries
+ Country cells activity
 
  Based on CP scores for the current cycle.
 
