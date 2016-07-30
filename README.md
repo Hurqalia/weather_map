@@ -26,6 +26,7 @@
  - Japan
  - Netherland
  - Poland
+ - Russia
  - Scotland
  - Spain
  - Great Britain (England + Scotland)
