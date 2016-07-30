@@ -16,11 +16,15 @@
   - Play all check points as a little animation
 
 # Available countries
+ - Austria
  - England
  - France
  - Germany
+ - India
  - Ireland
  - Italia
+ - Japan
+ - Netherland
  - Poland
  - Scotland
  - Spain
