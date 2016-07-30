@@ -4,6 +4,8 @@
 
  Based on CP scores for the current cycle.
 
+![screenshot](https://raw.githubusercontent.com/Hurqalia/weather_map/master/docs/weather-screen.png)
+
 # How To
 
  - First time, select the country of you choice to save your preferences.
