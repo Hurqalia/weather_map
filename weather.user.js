@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.3.20160726.001
+// @version        0.1.4.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -296,7 +296,7 @@ function wrapper(plugin_info) {
 				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
 				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
 			}
-			opacity = (opacity < 0.1) ? 0.1 : opacity;
+			opacity = (opacity < 0.2) ? 0.2 : opacity;
 
 			var ev_datas = {
 				name : name,
