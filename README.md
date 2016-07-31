@@ -22,23 +22,23 @@
  - Red : Scores RES and ENL equal to zero
 
 # Available countries
- - Austria
- - Canada
- - China
- - England
- - France
- - Germany
- - India
- - Ireland
- - Italia
- - Japan
- - Netherland
- - Poland
- - Russia
- - Scotland
- - Spain
- - Great Britain (England + Scotland)
- - United Kingdom (England + Scotland + Ireland)
- - USA
-
+ - Austria (   8 cells )
+ - Canada  ( 610 cells )
+ - China   ( 533 cells )
+ - England (  18 cells )
+ - France  (  61 cells )
+ - Germany (  26 cells )
+ - Great Britain ( 28 cells ) (England + Scotland)
+ - Ireland (  10 cells )
+ - India   ( 165 cells )
+ - Italia  (  33 cells )
+ - Japan   (  62 cells )
+ - Netherland ( 8 cells )
+ - Poland  (  19 cells )
+ - Russia  ( 867 cells )
+ - Scotland ( 11 cells )
+ - Spain   (  45 cells )
+ - United Kingdom ( 38 cells ) (England + Scotland + Ireland)
+ - USA     ( 505 cells )
+ 
 I can add your country, ask me by creating an issue or by email at hurqalia22 dot gmail.com
