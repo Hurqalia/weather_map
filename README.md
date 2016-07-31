@@ -14,6 +14,8 @@
   - A counter is displayed during loading scores. Wait until the panel displays and if some request fails a button will appears to reload the missing cells. Use it until the missing cells are recovered.
  - Show weather map by check point
   - Play all check points as a little animation
+ - Show cell detail on click
+ - Possible opacity cells relative to the score (set it in Weather Map Configurator)
 
 # Cells color
  - Blue : RES
