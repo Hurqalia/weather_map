@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.2.20160726.001
+// @version        0.1.3.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -26,6 +26,7 @@ function wrapper(plugin_info) {
 	// use own namespace for plugin
 
 	window.plugin.weather = function() {};
+	window.plugin.weather.prefs_plugin       = { opacity : 0 };
 	window.plugin.weather.prefs_country      = '';
 	window.plugin.weather.datas_country      = {};
 	window.plugin.weather.datas_counters     = {};
@@ -45,6 +46,7 @@ function wrapper(plugin_info) {
 	// preferences
 
 	window.plugin.weather.preferences =  {
+		KEYS_PREFS_PLUGIN   : 'plugin-weather-pref',
 		KEYS_PREFS_COUNTRY  : 'plugin-weather-pref-country',
 		KEYS_DATAS_COUNTRY  : 'plugin-weather-datas-country',
 		URL_LIST_COUNTRY    : 'https://raw.githubusercontent.com/Hurqalia/weather_map/master/countries.prefs',
@@ -62,8 +64,24 @@ function wrapper(plugin_info) {
 			t.is_country_loaded   = false;
 
 			t.loadPrefsCountry();
+			t.loadPrefsPlugin();
 
 			return (t.is_country_selected && t.is_country_loaded) ? true : false;
+		},
+		loadPrefsPlugin: function() {
+			var t = this;
+			t.current_key = t.KEYS_PREFS_PLUGIN;
+			var prefs = t.loadStorage();
+			if (prefs !== null && prefs !== '' && prefs !== 'undefined') {
+				window.plugin.weather.prefs_plugin = JSON.parse(prefs);
+			} else {
+				// maybe something to do with more prefs
+			}
+		},
+		savePrefsPlugin: function() {
+			var t = this;
+			t.current_key = t.KEYS_PREFS_PLUGIN;
+			t.saveStorage(JSON.stringify(window.plugin.weather.prefs_plugin));
 		},
 		loadPrefsCountry: function() {
 			var t = this;
@@ -193,10 +211,14 @@ function wrapper(plugin_info) {
 			$.each(t.options_list, function(i, record) {
 				var tld = Object.keys(record);
 				var selected = (window.plugin.weather.prefs_country == tld) ? 'selected' : '';
-				select_options += '<option value="' + tld + '" ' + selected +' >' + record[tld] + '</option>';
+				select_options += '<option id="weather-opacity-check" value="' + tld + '" ' + selected +' >' + record[tld] + '</option>';
 			});
 
 			content += '<select id="country_selector">' + select_options + '</select>';
+			content += '<br/>';
+
+			var is_checked = (window.plugin.weather.prefs_plugin.opacity == 1) ? 'checked' : '';
+			content += '<input id="opacity_check" type="checkbox" value="' + window.plugin.weather.prefs_plugin.opacity + '" ' + is_checked + '> Cells opacity relative to the teams score';
 
 			dialog({
 				width:'400px',
@@ -221,6 +243,7 @@ function wrapper(plugin_info) {
 
 						t.savePrefsCountry(window.plugin.weather.prefs_country);
 						t.saveDatasCountry(window.plugin.weather.datas_country);
+						t.savePrefsPlugin();
 
 						$(this).dialog('close');
 					},
@@ -228,7 +251,12 @@ function wrapper(plugin_info) {
 						$(this).dialog('close');
 					}
 				}
-           		});
+           	});
+
+			$('#opacity_check').click(function() {
+				window.plugin.weather.prefs_plugin.opacity = ($(this).val() == 1) ? 0 : 1;
+				$(this).val(window.plugin.weather.prefs_plugin.opacity);
+			});
 		}
 	};
 
@@ -245,15 +273,22 @@ function wrapper(plugin_info) {
 				game_score = r.result.gameScore;
 			}
 
-			var color  = '';
+			var color   = '';
+			var opacity = 0.5;
 			if (parseInt(game_score[0]) > parseInt(game_score[1])) {
 				color = 'green';
 				window.plugin.weather.datas_counters.teams.ENL.cell_count++;
 				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
+				if (window.plugin.weather.prefs_plugin.opacity == 1) {
+					opacity = Math.round((100 - (game_score[1] / game_score[0]) * 100)) / 100;
+				}
 			} else if (parseInt(game_score[0]) < parseInt(game_score[1])) {
 				color = 'blue';
 				window.plugin.weather.datas_counters.teams.RES.cell_count++;
 				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
+				if (window.plugin.weather.prefs_plugin.opacity == 1) {
+					opacity = Math.round((100 - (game_score[0] / game_score[1]) * 100)) / 100;
+				}
 			} else if ((parseInt(game_score[0]) === 0) && (parseInt(game_score[1]) === 0)) {
 				color = 'red';
 			} else if (parseInt(game_score[0]) === parseInt(game_score[1])) {
@@ -261,19 +296,24 @@ function wrapper(plugin_info) {
 				window.plugin.weather.datas_counters.teams.ENL.total += parseInt(game_score[0]);
 				window.plugin.weather.datas_counters.teams.RES.total += parseInt(game_score[1]);
 			}
+			opacity = (opacity < 0.1) ? 0.1 : opacity;
 
-			var frcell = L.geodesicPolyline([corners[0],corners[1],corners[2], corners[3]], {fill: true, color: color, opacity: 0.8, weight: 1, clickable: false, data : name });
+			var ev_datas = {
+				name : name,
+				RES  : parseInt(game_score[1]),
+				ENL  : parseInt(game_score[0])
+			};
 
+			var frcell = L.geodesicPolyline([corners[0],corners[1],corners[2], corners[3]], {fill: true, color: 'black', opacity: opacity, fillColor: color, fillOpacity : opacity, weight: 1, clickable: true, data : ev_datas });
+			frcell.on('click',  window.plugin.weather.onCellClick);
 			window.plugin.weather.weatherLayer.addLayer(frcell);
-
-			var content = name + "<br/>RES : " + game_score[1] + "<br/>ENL : " + game_score[0];
 
 			var marker = L.marker(center, {
 				icon: L.divIcon({
 					className: 'cell-content-name',
 					iconAnchor: [100,10],
 					iconSize: [200,10],
-					html: content,
+					html: name,
 				})
 			});
 
@@ -285,6 +325,44 @@ function wrapper(plugin_info) {
 			window.plugin.weather.drawSummary();
 			window.plugin.weather.in_progress = false;
 		}
+	};
+
+	window.plugin.weather.onCellClick = function(e) {
+		var percent = 0;
+		var team    = '';
+		if (parseInt(e.target.options.data.ENL) > parseInt(e.target.options.data.RES)) {
+			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.RES) * 100) / parseInt(e.target.options.data.ENL))) / 100;
+			team    = 'ENL';
+		} else if (parseInt(e.target.options.data.RES) > parseInt(e.target.options.data.ENL)) {
+			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.ENL) * 100) / parseInt(e.target.options.data.RES))) / 100;
+			team    = 'RES';
+		} else {
+			if (parseInt(e.target.options.data.RES) !== 0) {
+				percent = 50;
+			}
+		}
+
+		var content = '<h3> CELL : ' + e.target.options.data.name + '</h3>';
+		content    += '<p>';
+		content    += 'Scores for this cell : <br >';
+		content    += 'ENL : ' + e.target.options.data.ENL + ' Mu<br/>';
+		content    += 'RES : ' + e.target.options.data.RES + ' Mu<br/>';
+		content    += '</p>';
+		if (percent === 0) {
+			content += "There's someone in this cell !!??";
+		} else if (percent === 50) {
+			content += "Awesome !! Draw !!!";
+		} else {
+			content += team + ' score represents ' + percent + '% of the total Mu';
+		}
+
+		dialog({
+				width:'400px',
+				html: '<div>' + content + '</div',
+				id: 'plugin-weather-country-box',
+				dialogClass: '',
+				title: 'Weather Map Cell Details',
+		});
 	};
 
 	// draw summary
@@ -396,7 +474,7 @@ function wrapper(plugin_info) {
 	};
 
 	// check point countdown
-	
+
 	window.plugin.weather.initCountDown = function() {
 		var dashboard = document.getElementById('dashboard');
 		var counter_div = document.createElement('div');
