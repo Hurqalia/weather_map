@@ -391,8 +391,8 @@ function wrapper(plugin_info) {
 			'<tr><td>ENL Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.ENL.cell_count + '</td></tr>' +
 			'<tr><td>RES Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.RES.cell_count + '</td></tr>' +
 			'<tr><td colspan=2>' + perc + '% of territory occupied by ' + best_cell + '</td></tr>' +
-			'<tr><td>ENL Total MU</td><td align="right"> : ' + window.plugin.weather.datas_counters.teams.ENL.total.toLocaleString() + ' MU</td></tr>' +
-			'<tr><td>RES Total MU</td><td align="right"> : ' + window.plugin.weather.datas_counters.teams.RES.total.toLocaleString() + ' MU</td></tr>' +
+			'<tr><td>ENL Total MU</td><td align="right">' + window.plugin.weather.datas_counters.teams.ENL.total.toLocaleString() + ' MU</td></tr>' +
+			'<tr><td>RES Total MU</td><td align="right">' + window.plugin.weather.datas_counters.teams.RES.total.toLocaleString() + ' MU</td></tr>' +
 			'</table>';
 
 		if (window.plugin.weather.cells_failed.length > 0) {
