@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.4.20160726.001
+// @version        0.1.5.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -270,7 +270,7 @@ function wrapper(plugin_info) {
 				game_score[0] = r.scoreHistory[window.plugin.weather.selected_cp][1];
 				game_score[1] = r.scoreHistory[window.plugin.weather.selected_cp][2];
 			} else {
-				game_score = r.result.gameScore;
+				game_score = r.gameScore;
 			}
 
 			var color   = '';
@@ -305,7 +305,7 @@ function wrapper(plugin_info) {
 			};
 
 			var frcell = L.geodesicPolyline([corners[0],corners[1],corners[2], corners[3]], {fill: true, color: 'black', opacity: opacity, fillColor: color, fillOpacity : opacity, weight: 1, clickable: true, data : ev_datas });
-			frcell.on('click',  window.plugin.weather.onCellClick);
+			frcell.on('click', window.plugin.weather.onCellClick);
 			window.plugin.weather.weatherLayer.addLayer(frcell);
 
 			var marker = L.marker(center, {
@@ -330,12 +330,18 @@ function wrapper(plugin_info) {
 	window.plugin.weather.onCellClick = function(e) {
 		var percent = 0;
 		var team    = '';
+		var pteam   = '';
+		var pmu     = 0;
 		if (parseInt(e.target.options.data.ENL) > parseInt(e.target.options.data.RES)) {
 			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.RES) * 100) / parseInt(e.target.options.data.ENL))) / 100;
 			team    = 'ENL';
+			pteam   = 'RES';
+			pmu     = ((parseInt(e.target.options.data.ENL) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][1])) - parseInt(e.target.options.data.RES));
 		} else if (parseInt(e.target.options.data.RES) > parseInt(e.target.options.data.ENL)) {
 			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.ENL) * 100) / parseInt(e.target.options.data.RES))) / 100;
 			team    = 'RES';
+			pteam   = 'ENL';
+			pmu     = ((parseInt(e.target.options.data.RES) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][2])) - parseInt(e.target.options.data.ENL));
 		} else {
 			if (parseInt(e.target.options.data.RES) !== 0) {
 				percent = 50;
@@ -344,9 +350,9 @@ function wrapper(plugin_info) {
 
 		var content = '<h3> CELL : ' + e.target.options.data.name + '</h3>';
 		content    += '<p>';
-		content    += 'Scores for this cell : <br >';
-		content    += 'ENL : ' + e.target.options.data.ENL + ' Mu<br/>';
-		content    += 'RES : ' + e.target.options.data.RES + ' Mu<br/>';
+		content    += 'Scores for this cell : <br />';
+		content    += 'ENL : ' + e.target.options.data.ENL.toLocaleString() + ' Mu<br/>';
+		content    += 'RES : ' + e.target.options.data.RES.toLocaleString() + ' Mu<br/>';
 		content    += '</p>';
 		if (percent === 0) {
 			content += "There's someone in this cell !!??";
@@ -354,6 +360,12 @@ function wrapper(plugin_info) {
 			content += "Awesome !! Draw !!!";
 		} else {
 			content += team + ' score represents ' + percent + '% of the total Mu';
+		}
+		if ((pmu !== 0) && ((window.plugin.weather.selected_cp === 'C') || (window.plugin.weather.selected_cp === null))) {
+			content += '<p>';
+			content += 'To take pole position on this cell :<br />';
+			content += pteam + ' must achieve ' + pmu.toLocaleString() + ' Mu<br />';
+			content += '</p>';
 		}
 
 		dialog({
@@ -379,8 +391,8 @@ function wrapper(plugin_info) {
 			'<tr><td>ENL Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.ENL.cell_count + '</td></tr>' +
 			'<tr><td>RES Cells count</td><td> : ' + window.plugin.weather.datas_counters.teams.RES.cell_count + '</td></tr>' +
 			'<tr><td colspan=2>' + perc + '% of territory occupied by ' + best_cell + '</td></tr>' +
-			'<tr><td>ENL Total MU</td><td> : ' + window.plugin.weather.datas_counters.teams.ENL.total + ' MU</td></tr>' +
-			'<tr><td>RES Total MU</td><td> : ' + window.plugin.weather.datas_counters.teams.RES.total + ' MU</td></tr>' +
+			'<tr><td>ENL Total MU</td><td> : ' + window.plugin.weather.datas_counters.teams.ENL.total.toLocaleString() + ' MU</td></tr>' +
+			'<tr><td>RES Total MU</td><td> : ' + window.plugin.weather.datas_counters.teams.RES.total.toLocaleString() + ' MU</td></tr>' +
 			'</table>';
 
 		if (window.plugin.weather.cells_failed.length > 0) {
@@ -392,6 +404,7 @@ function wrapper(plugin_info) {
 			if (cp_index > 1) {
 				summbox += '<p>Show another checkpoint : ';
 				summbox += '<select id="cp_selector">';
+				summbox += '<option value="C">Current Score</option>';
 				for (var i=0; i < cp_index; i++) { 
 					var label     = cp_index - i;
 					var selected  = ((window.plugin.weather.selected_cp !== null) && (window.plugin.weather.selected_cp == i)) ? 'selected' : '';
@@ -444,7 +457,7 @@ function wrapper(plugin_info) {
 		window.plugin.weather.timeline_count--;
 	};
 
-	window.plugin.weather.drawCheckPoint = function(cp_id) {
+	window.plugin.weather.drawCheckPoint = function() {
 		if (window.plugin.weather.in_progress) {
 			return false;
 		}
@@ -460,13 +473,15 @@ function wrapper(plugin_info) {
 
 		$("#sumbox-weather").empty();
 
+		var is_cp = (window.plugin.weather.selected_cp !== 'C') ? true : false;
+
 		$.each(window.plugin.weather.datas_country, function(name, datas) {
 			window.plugin.weather.collected++;
 			window.plugin.weather.load_cells_count++;
 			var result  = window.plugin.weather.datas_counters.datas[name];
 			var corners = window.plugin.weather.datas_counters.corners[name];
 			var center  = window.plugin.weather.datas_counters.center[name];
-			window.plugin.weather.drawCell(result, corners, center, name, true);
+			window.plugin.weather.drawCell(result, corners, center, name, is_cp);
 		});
 
 		addLayerGroup('Weather Map', window.plugin.weather.weatherLayer, true);
@@ -638,8 +653,8 @@ function wrapper(plugin_info) {
 			        	window.plugin.weather.load_cells_count++;
 			        	window.plugin.weather.datas_counters.datas[name]   = result.result;
 			        	window.plugin.weather.datas_counters.corners[name] = corners;
-			        	window.plugin.weather.datas_counters.center[name]   = center;
-					window.plugin.weather.drawCell(result, corners, center, name, false);
+			        	window.plugin.weather.datas_counters.center[name]  = center;
+					window.plugin.weather.drawCell(result.result, corners, center, name, false);
 				},
 				function() {
 					if (window.plugin.weather.cells_failed.indexOf(name) === -1) {
