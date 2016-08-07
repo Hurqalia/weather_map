@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.5.20160726.001
+// @version        0.1.6.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -336,12 +336,10 @@ function wrapper(plugin_info) {
 			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.RES) * 100) / parseInt(e.target.options.data.ENL))) / 100;
 			team    = 'ENL';
 			pteam   = 'RES';
-			pmu     = ((parseInt(e.target.options.data.ENL) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][1])) - parseInt(e.target.options.data.RES));
 		} else if (parseInt(e.target.options.data.RES) > parseInt(e.target.options.data.ENL)) {
 			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.ENL) * 100) / parseInt(e.target.options.data.RES))) / 100;
 			team    = 'RES';
 			pteam   = 'ENL';
-			pmu     = ((parseInt(e.target.options.data.RES) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][2])) - parseInt(e.target.options.data.ENL));
 		} else {
 			if (parseInt(e.target.options.data.RES) !== 0) {
 				percent = 50;
@@ -361,10 +359,21 @@ function wrapper(plugin_info) {
 		} else {
 			content += team + ' score represents ' + percent + '% of the total Mu';
 		}
-		if ((pmu !== 0) && ((window.plugin.weather.selected_cp === 'C') || (window.plugin.weather.selected_cp === null))) {
+		if ((pteam !== '') && ((window.plugin.weather.selected_cp === 'C') || (window.plugin.weather.selected_cp === null))) {
+			var rscore = 0;
+			var escore = 0;
+			for(var i = 0; i < window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory.length; i++) {
+				escore += parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[i][1]);
+				rscore += parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[i][2]);
+			}
+			if (pteam == 'RES') {
+				pmu = (parseInt(escore) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][1])) - parseInt(rscore);
+			} else {
+				pmu = (parseInt(rscore) + parseInt(window.plugin.weather.datas_counters.datas[e.target.options.data.name].scoreHistory[0][2])) - parseInt(escore);
+			}
 			content += '<p>';
 			content += 'To take pole position on this cell :<br />';
-			content += pteam + ' must achieve ' + pmu.toLocaleString() + ' Mu<br />';
+			content += pteam + ' must achieve more than ' + pmu.toLocaleString() + ' Mu<br />';
 			content += '</p>';
 		}
 
