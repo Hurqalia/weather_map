@@ -2,7 +2,7 @@
 // @id             iitc-plugin-weather
 // @name           IITC plugin: Weather Map
 // @category       Layer
-// @version        0.1.6.20160726.001
+// @version        0.1.7.20160726.001
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://github.com/Hurqalia/weather_map/raw/master/weather.meta.js
 // @downloadURL    https://github.com/Hurqalia/weather_map/raw/master/weather.user.js
@@ -328,22 +328,15 @@ function wrapper(plugin_info) {
 	};
 
 	window.plugin.weather.onCellClick = function(e) {
-		var percent = 0;
 		var team    = '';
 		var pteam   = '';
 		var pmu     = 0;
 		if (parseInt(e.target.options.data.ENL) > parseInt(e.target.options.data.RES)) {
-			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.RES) * 100) / parseInt(e.target.options.data.ENL))) / 100;
 			team    = 'ENL';
 			pteam   = 'RES';
 		} else if (parseInt(e.target.options.data.RES) > parseInt(e.target.options.data.ENL)) {
-			percent = Math.round( 100 * (100 - (parseInt(e.target.options.data.ENL) * 100) / parseInt(e.target.options.data.RES))) / 100;
 			team    = 'RES';
 			pteam   = 'ENL';
-		} else {
-			if (parseInt(e.target.options.data.RES) !== 0) {
-				percent = 50;
-			}
 		}
 
 		var content = '<h3> CELL : ' + e.target.options.data.name + '</h3>';
@@ -352,13 +345,7 @@ function wrapper(plugin_info) {
 		content    += 'ENL : ' + e.target.options.data.ENL.toLocaleString() + ' Mu<br/>';
 		content    += 'RES : ' + e.target.options.data.RES.toLocaleString() + ' Mu<br/>';
 		content    += '</p>';
-		if (percent === 0) {
-			content += "There's someone in this cell !!??";
-		} else if (percent === 50) {
-			content += "Awesome !! Draw !!!";
-		} else {
-			content += team + ' score represents ' + percent + '% of the total Mu';
-		}
+		
 		if ((pteam !== '') && ((window.plugin.weather.selected_cp === 'C') || (window.plugin.weather.selected_cp === null))) {
 			var rscore = 0;
 			var escore = 0;
