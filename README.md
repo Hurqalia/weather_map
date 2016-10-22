@@ -38,6 +38,7 @@
  - Japan   (  62 cells )
  - Netherland ( 8 cells )
  - Poland  (  19 cells )
+ - Portugal ( 22 cells) (including The Azores and Madeira archipelagos)
  - Russia  ( 867 cells )
  - Scotland ( 11 cells )
  - Spain   (  45 cells )
