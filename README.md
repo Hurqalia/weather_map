@@ -45,4 +45,4 @@
  - United Kingdom ( 38 cells ) (England + Scotland + Ireland)
  - USA     ( 505 cells )
  
-I can add your country, ask me by creating an issue or by email at hurqalia22 at gmail got com
+I can add your country, ask me by creating an issue or by email at hurqalia22 at gmail dot com
