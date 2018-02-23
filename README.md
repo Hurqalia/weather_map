@@ -26,6 +26,7 @@
 # Available countries
  - Austria (   8 cells )
  - Belgium (   2 cells )
+ - Brazil  ( 502 cells )
  - Canada  ( 610 cells )
  - China   ( 533 cells )
  - England (  18 cells )
