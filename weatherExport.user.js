@@ -4,7 +4,7 @@
 // @category       Layer
 // @version        0.3.0
 // @description    Selects and exports the scoring regions, hacked from scoring regions plugin
-// @id             regions
+// @id             regionsExport
 // @namespace      https://github.com/IITC-CE/ingress-intel-total-conversion
 // @match          https://*.ingress.com/*
 // @grant          none
